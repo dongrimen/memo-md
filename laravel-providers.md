@@ -2,6 +2,25 @@
 
 Repositoryパターンは、データアクセスロジックをビジネスロジックから分離するためのデザインパターンです。
 
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── UserController.php  // コントローラー
+│   └── Middleware/
+├── Models/
+│   ├── User.php  // Eloquentモデル（Eloquentを使用する場合）
+├── Providers/
+│   ├── AppServiceProvider.php  // Repositoryのバインディングを行う
+├── Repositories/
+│   ├── UserRepositoryInterface.php  // リポジトリインターフェース
+│   ├── UserRepository.php  // 実装クラス
+├── Services/
+│   ├── UserService.php  // ビジネスロジックを担当
+└── ...
+```
+
+
 ## Repositoryパターンのメリット
 
 * **依存性の分離**: ビジネスロジックがデータアクセス方法に依存しないため、データベースの変更やテストが容易になります。
