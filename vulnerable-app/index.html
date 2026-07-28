@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnSocial - 脆弱性研究用アプリ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VulnSocial</h1>
+            <p class="subtitle">セキュリティ研究用の脆弱なソーシャルアプリ</p>
+        </header>
+
+        <!-- ログイン画面 -->
+        <div id="login-section" class="section">
+            <h2>ログイン</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">ユーザー名:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">パスワード:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">ログイン</button>
+            </form>
+            <p class="hint">ヒント: admin/password または user/123456 でログインできます</p>
+        </div>
+
+        <!-- メインアプリ画面 -->
+        <div id="app-section" class="section hidden">
+            <nav class="navbar">
+                <span id="welcome-message"></span>
+                <div class="nav-buttons">
+                    <button onclick="showDashboard()">ダッシュボード</button>
+                    <button onclick="showProfile()">プロフィール</button>
+                    <button onclick="showSettings()">設定</button>
+                    <button onclick="logout()">ログアウト</button>
+                </div>
+            </nav>
+
+            <!-- ダッシュボード -->
+            <div id="dashboard" class="content-area">
+                <h2>ダッシュボード</h2>
+                
+                <!-- 投稿フォーム -->
+                <div class="post-form">
+                    <h3>新しい投稿</h3>
+                    <textarea id="post-content" placeholder="何を考えていますか？"></textarea>
+                    <button onclick="createPost()">投稿する</button>
+                </div>
+
+                <!-- 検索機能 -->
+                <div class="search-form">
+                    <h3>ユーザー検索</h3>
+                    <input type="text" id="search-input" placeholder="ユーザー名を入力">
+                    <button onclick="searchUsers()">検索</button>
+                    <div id="search-results"></div>
+                </div>
+
+                <!-- 投稿一覧 -->
+                <div id="posts-container">
+                    <h3>最新の投稿</h3>
+                    <div id="posts-list"></div>
+                </div>
+            </div>
+
+            <!-- プロフィール画面 -->
+            <div id="profile" class="content-area hidden">
+                <h2>プロフィール</h2>
+                <div id="profile-content"></div>
+                
+                <!-- 他のユーザーのプロフィールを見る（IDOR脆弱性） -->
+                <div class="profile-viewer">
+                    <h3>他のユーザーのプロフィールを見る</h3>
+                    <input type="number" id="user-id" placeholder="ユーザーID (1-5)" min="1" max="5">
+                    <button onclick="viewUserProfile()">プロフィールを見る</button>
+                    <div id="other-profile"></div>
+                </div>
+            </div>
+
+            <!-- 設定画面 -->
+            <div id="settings" class="content-area hidden">
+                <h2>設定</h2>
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label for="email">メールアドレス:</label>
+                        <input type="email" id="email" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="bio">自己紹介:</label>
+                        <textarea id="bio" name="bio"></textarea>
+                    </div>
+                    <button type="submit">設定を保存</button>
+                </form>
+                
+                <!-- CSRF攻撃のデモ用 -->
+                <div class="csrf-demo">
+                    <h3>外部サイトからの設定変更テスト</h3>
+                    <p>以下のリンクをクリックすると、外部サイトから設定が変更される可能性があります：</p>
+                    <a href="csrf-attack.html" target="_blank">外部サイトを開く</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 管理者パネル（権限昇格の脆弱性） -->
+        <div id="admin-panel" class="section hidden">
+            <h2>管理者パネル</h2>
+            <p>管理者のみアクセス可能です</p>
+            <div class="admin-functions">
+                <button onclick="viewAllUsers()">全ユーザー情報を表示</button>
+                <button onclick="deleteUser()">ユーザー削除</button>
+            </div>
+            <div id="admin-content"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
